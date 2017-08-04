@@ -1,0 +1,10 @@
+[package]
+name = "proxy_config"
+version = "0.0.0"
+authors = ["mattico8@gmail.com"]
+description = "A library to get proxy configuration from the OS."
+repository = "https://github.com/mattico/proxy-config"
+readme = "README.md"
+keywords = ["proxy"]
+categories = ["network-programming", "os"]
+license = "MIT/Apache-2.0"
