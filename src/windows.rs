@@ -38,7 +38,7 @@ pub fn get_proxy_strings() -> Result<Vec<String>, ProxyConfigError> {
     };
 
     if let Ok(key) = RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(REG_SETTINGS, KEY_READ) {
-        if key.get_value("ProxyEnabled").unwrap_or(0u32) != 0 {
+        if key.get_value("ProxyEnable").unwrap_or(0u32) != 0 {
             if let Ok(config) = key.get_value("ProxyServer") {
                 let config: String = config;
 
@@ -56,7 +56,11 @@ pub fn get_proxy_strings() -> Result<Vec<String>, ProxyConfigError> {
                     }
                     return Ok(result);
                 } else {
-                    return Ok(vec![config]);
+                    if config.contains("://") {
+                        return Ok(vec![config]);
+                    } else {
+                        return Ok(vec![format!("http://{}", config)]);
+                    }
                 }
             }
         }
