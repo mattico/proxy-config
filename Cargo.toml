@@ -2,13 +2,15 @@
 name = "proxy_config"
 version = "0.0.0"
 authors = ["mattico8@gmail.com"]
-description = "A library to get proxy configuration from the OS."
-repository = "https://github.com/mattico/proxy-config"
-readme = "README.md"
-keywords = ["proxy"]
 categories = ["network-programming", "os"]
+description = "A library to get proxy configuration from the OS."
+keywords = ["proxy"]
 license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/mattico/proxy-config"
 
-[target.'cfg(windows)'.dependencies]
-winapi = "0.2"
-kernel32-sys = "0.2"
+[dependencies]
+url = "1.5"
+
+[target."cfg(windows)".dependencies]
+winreg = "0.4"
