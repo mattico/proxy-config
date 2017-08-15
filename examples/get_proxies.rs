@@ -1,6 +1,3 @@
-
-#![feature(iterator_for_each)]
-
 extern crate proxy_config;
 extern crate url;
 
@@ -14,7 +11,11 @@ fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
     if args.len() == 0 {
         match get_proxies() {
-            Ok(proxies) => proxies.into_iter().for_each(|p| println!("{}", p)),
+            Ok(proxies) => {
+                for proxy in proxies {
+                    println!("{}", proxy);
+                }
+            },
             Err(e) => {
                  println!("Error getting proxies: {}", e);
                  process::exit(1);
