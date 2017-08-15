@@ -42,10 +42,10 @@ fn proxy_autoconfig_type() -> AutoconfigType {
     AutoconfigType::None
 }
 
-pub fn get_proxy_strings() -> Result<Vec<String>, ProxyConfigError> {
+pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
     match proxy_autoconfig_type() {
-        AutoconfigType::Pac => return Err(ProxyTypeNotSupportedError("PAC")),
-        AutoconfigType::Wpad => return Err(ProxyTypeNotSupportedError("WPAD")),
+        AutoconfigType::Pac => return Err(ProxyTypeNotSupportedError("PAC".into())),
+        AutoconfigType::Wpad => return Err(ProxyTypeNotSupportedError("WPAD".into())),
         AutoconfigType::None => {},
     };
 
@@ -53,27 +53,39 @@ pub fn get_proxy_strings() -> Result<Vec<String>, ProxyConfigError> {
         if key.get_value("ProxyEnable").unwrap_or(0u32) != 0 {
             if let Ok(config) = key.get_value("ProxyServer") {
                 let config: String = config;
+                let mut proxies = HashMap::new();
+                let mut whitelist = Vec::new();
 
                 // There are two types of ProxyServer values:
                 // - 1.2.3.4:8080
                 // - http=1.2.3.4:8080;https=1.2.3.4:8080;...
                 if config.contains(";") {
-                    let mut result = Vec::new();
-                    for proxy in config.split(";") {
+                    for proxy in config.split(";").map(|s| s.trim()) {
                         let split: Vec<&str> = proxy.split("=").collect();
                         if split.len() != 2 { 
-                            return Err(InvalidConfigError("invalid proxy list in Registry"));
+                            return Err(InvalidConfigError);
                         }
-                        result.push(format!("{}://{}", split[0], split[1]));
+                        proxies.insert(split[0].into(), util::parse_addr_default_scheme(split[0], split[1])?);                     
                     }
-                    return Ok(result);
                 } else {
-                    if config.contains("://") {
-                        return Ok(vec![config]);
-                    } else {
-                        return Ok(vec![format!("http://{}", config)]);
+                    proxies.insert("http".into(), util::parse_addr_default_scheme("http", &config)?);
+                }
+
+                if let Ok(ignore) = key.get_value("ProxyOverride") {
+                    let ignore: String = ignore;
+
+                    for url in ignore.split(";").map(|s| s.trim()) {
+                        if url.len() > 0 {
+                            whitelist.push(url.into());
+                        }
                     }
                 }
+
+                return Ok(ProxyConfig {
+                    proxies,
+                    whitelist,
+                    ..Default::default()
+                });
             }
         }
     }
