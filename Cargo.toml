@@ -14,3 +14,7 @@ url = "1.5"
 
 [target."cfg(windows)".dependencies]
 winreg = "0.4"
+
+[features]
+default = ["env"]
+env = []
