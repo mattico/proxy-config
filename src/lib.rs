@@ -88,8 +88,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_proxy() {
-        let proxy_config = get_proxies();
-        assert!(proxy_config.is_ok());
+    fn smoke_test_get_proxies() {
+        let _ = get_proxies();
+    }
+
+    #[test]
+    fn smoke_test_get_proxy_for_url() {
+        let _ = get_proxy_for_url(Url::parse("https://google.com").unwrap());
     }
 }
