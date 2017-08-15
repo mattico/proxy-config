@@ -7,35 +7,38 @@ use url::Url;
 #[cfg(windows)]
 mod windows;
 
-mod plat {
+#[cfg(feature = "env")]
+mod env;
+
+type ProxyFn = fn() -> Result<Vec<String>, ProxyConfigError>;
+
+const METHODS: &[&ProxyFn] = &[
+    #[cfg(feature = "env")]
+    &(env::get_proxy_strings as ProxyFn),
     #[cfg(windows)]
-    pub use windows::get_proxy_strings;
-
-    #[allow(unused_imports)]
-    use super::*;
-
-    #[cfg(not(windows))]
-    pub fn get_proxy_strings() -> Result<Vec<String>, ProxyConfigError> {
-        Err(PlatformNotSupportedError)
-    }
-}
+    &(windows::get_proxy_strings as ProxyFn),
+];
 
 /// Returns a vector of URLs for the proxies configured by the system
 pub fn get_proxies() -> Result<Vec<Url>, ProxyConfigError> {
-    match plat::get_proxy_strings() {
-        Ok(strings) => {
-            let mut result = vec![];
-            for string in strings {
-                if let Ok(url) = Url::parse(&string) {
-                    result.push(url);
-                } else {
-                    return Err(InvalidConfigError("unable to parse proxy URL"));
+    let mut last_err = PlatformNotSupportedError;
+    for get_proxy_strings in METHODS {
+        match get_proxy_strings() {
+            Ok(strings) => {
+                let mut result = vec![];
+                for string in strings {
+                    if let Ok(url) = Url::parse(&string) {
+                        result.push(url);
+                    } else {
+                        return Err(InvalidConfigError("unable to parse proxy URL"));
+                    }
                 }
-            }
-            Ok(result)
-        },
-        Err(e) => Err(e),
+                return Ok(result);
+            },
+            Err(e) => last_err = e,
+        }
     }
+    Err(last_err)
 }
 
 /// Returns the proxy to use for the given URL
