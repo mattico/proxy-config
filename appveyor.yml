@@ -35,12 +35,12 @@ install:
   - cargo -V
 
 test_script:
-  # we don't run the "test phase" when doing deploys
+  # need to run tests serially since we modify env vars in them
   - if [%APPVEYOR_REPO_TAG%]==[false] (
       cargo build --target %TARGET% &&
       cargo build --target %TARGET% --release &&
-      cargo test --target %TARGET% &&
-      cargo test --target %TARGET% --release &&
+      cargo test --target %TARGET% -- --test-threads=1 &&
+      cargo test --target %TARGET% --release -- --test-threads=1 &&
       cargo build --example get_proxies &&
       cargo build --example get_proxies --release
     )

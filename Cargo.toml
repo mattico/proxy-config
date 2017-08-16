@@ -1,19 +1,24 @@
 [package]
-name = "proxy_config"
-version = "0.0.0"
 authors = ["mattico8@gmail.com"]
 categories = ["network-programming", "os"]
 description = "A library to get proxy configuration from the OS."
 keywords = ["proxy"]
 license = "MIT/Apache-2.0"
+name = "proxy_config"
 readme = "README.md"
 repository = "https://github.com/mattico/proxy-config"
+version = "0.0.0"
 
 [badges]
 appveyor = { repository = "https://github.com/mattico/proxy-config" }
+travis-ci = { repository = "https://github.com/mattico/proxy-config" }
 
 [dependencies]
 url = "1.5"
+
+[features]
+default = ["env"]
+env = []
 
 [target."cfg(windows)".dependencies]
 winreg = "0.4"

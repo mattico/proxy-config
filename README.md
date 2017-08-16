@@ -1,6 +1,6 @@
 # proxy-config
 [![Build status](https://ci.appveyor.com/api/projects/status/uip8grlodr0y4q8c/branch/master?svg=true)](https://ci.appveyor.com/project/mattico/proxy-config/branch/master)
-
+[![Build Status](https://travis-ci.org/mattico/proxy-config.svg?branch=master)](https://travis-ci.org/mattico/proxy-config)
 
 A Rust library to get proxy configuration from the OS.
 
