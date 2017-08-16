@@ -1,13 +1,14 @@
 [package]
+name = "proxy_config"
+version = "0.0.1"
 authors = ["mattico8@gmail.com"]
 categories = ["network-programming", "os"]
 description = "A library to get proxy configuration from the OS."
 keywords = ["proxy"]
 license = "MIT/Apache-2.0"
-name = "proxy_config"
 readme = "README.md"
 repository = "https://github.com/mattico/proxy-config"
-version = "0.0.0"
+documentation = "https://docs.rs/proxy_config"
 
 [badges]
 appveyor = { repository = "https://github.com/mattico/proxy-config" }
