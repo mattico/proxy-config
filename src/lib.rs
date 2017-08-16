@@ -52,12 +52,13 @@ pub fn get_proxy_for_url(url: Url) -> Result<Url> {
     match get_proxy_config() {
         Ok(config) => {
             for domain in config.whitelist {
+                // TODO: make this more robust
                 if url.domain().unwrap().eq_ignore_ascii_case(&domain) {
                     return Err(NoProxyNeededError);
                 }
             }
 
-            if let Some(url) = config.proxies.get(&url.scheme().to_string()) {
+            if let Some(url) = config.proxies.get(url.scheme()) {
                 Ok(url.clone())
             } else {
                 Err(NoProxyForSchemeError(url.scheme().to_string()))
