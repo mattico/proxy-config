@@ -14,9 +14,6 @@ main() {
     # need to run tests serially, since we modify env vars
     cross test --target $TARGET -- --test-threads=1
     cross test --target $TARGET --release -- --test-threads=1
-
-    cross run --target $TARGET
-    cross run --target $TARGET --release
 }
 
 # we don't run the "test phase" when doing deploys
