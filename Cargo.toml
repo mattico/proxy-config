@@ -1,6 +1,6 @@
 [package]
 name = "proxy_config"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["mattico8@gmail.com"]
 categories = ["network-programming", "os"]
 description = "A library to get proxy configuration from the OS."
@@ -11,8 +11,8 @@ repository = "https://github.com/mattico/proxy-config"
 documentation = "https://docs.rs/proxy_config"
 
 [badges]
-appveyor = { repository = "https://github.com/mattico/proxy-config" }
-travis-ci = { repository = "https://github.com/mattico/proxy-config" }
+appveyor = { repository = "mattico/proxy-config" }
+travis-ci = { repository = "mattico/proxy-config" }
 
 [dependencies]
 url = "1.5"
