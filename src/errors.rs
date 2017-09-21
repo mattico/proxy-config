@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fmt;
+use std::io;
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum ProxyConfigError {
@@ -10,6 +11,7 @@ pub enum ProxyConfigError {
     OsError,
     PlatformNotSupportedError,
     ProxyTypeNotSupportedError(String),
+    ConfigurationNotReadableError,
 }
 use ProxyConfigError::*;
 pub type Result<T> = ::std::result::Result<T, ProxyConfigError>;
@@ -24,6 +26,7 @@ impl Error for ProxyConfigError {
             OsError => "error getting proxy configuration from the Operating System",
             PlatformNotSupportedError => "can not read proxy configuration on this platform",
             ProxyTypeNotSupportedError(_) => "proxy type not supported",
+            ConfigurationNotReadableError => "Could not read configuration file",
         }
     }
 }
@@ -41,5 +44,11 @@ impl fmt::Display for ProxyConfigError {
 impl From<::url::ParseError> for ProxyConfigError {
     fn from(_error: ::url::ParseError) -> Self {
         InvalidConfigError
+    }
+}
+
+impl From<io::Error> for ProxyConfigError {
+    fn from(_error: io::Error) -> Self {
+        ConfigurationNotReadableError
     }
 }
