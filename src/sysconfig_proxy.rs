@@ -1,5 +1,5 @@
 
-//! This module reads the proxy configuration file /etc/sysconfig_proxy which 
+//! This module reads the proxy configuration file /etc/sysconfig/proxy which 
 //! exists on Red Hat Enterprise Linux and related Linux systems. For a
 //! description of the configuration file format see:
 //! https://www.novell.com/support/kb/doc.php?id=7006845
@@ -11,7 +11,7 @@ use std::io::{BufRead,BufReader};
 
 use super::*;
 
-/// Extract proxy information from /etc/sysconfig_proxy if the file is available
+/// Extract proxy information from /etc/sysconfig/proxy if the file is available
 /// and formatted correctly. If the file is not available or if there are any
 /// other IO erros, an ConfigurationNotReadableError error will be returned.
 pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
@@ -183,7 +183,7 @@ PROXY_ENABLED="yes""##);
     #[test]
     fn test_whitelist() {
         // It would be nicer to test this directly with get_proxy_for_url() but
-        // then we would need to overwrite /etc/sysconfig_proxy which is
+        // then we would need to overwrite /etc/sysconfig/proxy which is
         // something a unit test should not do.
 
         let file = spit(r##"HTTP_PROXY="http://1.2.3.4"
