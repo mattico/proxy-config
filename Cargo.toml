@@ -17,9 +17,13 @@ travis-ci = { repository = "mattico/proxy-config" }
 [dependencies]
 url = "1.5"
 
+[dev-dependencies]
+tempfile = "2.1.6"
+
 [features]
-default = ["env"]
+default = ["env", "sysconfig_proxy"]
 env = []
+sysconfig_proxy = []
 
 [target."cfg(windows)".dependencies]
 winreg = "0.4"

@@ -10,6 +10,9 @@ mod windows;
 #[cfg(feature = "env")]
 mod env;
 
+#[cfg(feature = "sysconfig_proxy")]
+mod sysconfig_proxy;
+
 mod errors;
 mod util;
 
@@ -29,6 +32,8 @@ type ProxyFn = fn() -> Result<ProxyConfig>;
 const METHODS: &[&ProxyFn] = &[
     #[cfg(feature = "env")]
     &(env::get_proxy_config as ProxyFn),
+    #[cfg(feature = "sysconfig_proxy")]
+    &(sysconfig_proxy::get_proxy_config as ProxyFn), //This configurator has to come after the `env` configurator, because environment variables take precedence over /etc/sysconfig/proxy
     #[cfg(windows)]
     &(windows::get_proxy_config as ProxyFn),
 ];
