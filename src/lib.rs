@@ -7,6 +7,11 @@ use url::Url;
 #[cfg(windows)]
 mod windows;
 
+#[cfg(target_os="macos")]
+mod macos;
+#[cfg(target_os="macos")]
+extern crate plist;
+
 #[cfg(feature = "env")]
 mod env;
 
@@ -31,6 +36,8 @@ const METHODS: &[&ProxyFn] = &[
     &(env::get_proxy_config as ProxyFn),
     #[cfg(windows)]
     &(windows::get_proxy_config as ProxyFn),
+    #[cfg(target_os="macos")]
+    &(macos::get_proxy_config as ProxyFn),
 ];
 
 /// Returns a vector of URLs for the proxies configured by the system
