@@ -7,108 +7,64 @@ use std::{
 
 use super::*;
 
-#[allow(unused_assignments)]
 pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
-    let mut xml_data = String::new();
 
-    if File::open("/Library/Preferences/SystemConfiguration/preferences.plist").ok()
-        .and_then(|mut file| file.read_to_string(&mut xml_data).ok())
-        == Some(0) {
-        // Failed to read preferences.plist
-        return Err(OsError)
-    }
+    let plist = File::open("/Library/Preferences/SystemConfiguration/preferences.plist").ok()
+        .and_then(|file| Plist::read(file).ok()).ok_or(OsError)?;
 
-    if let Some(Plist::Dict(decoded_data)) = Plist::from_xml_reader(&mut xml_data.as_bytes()).ok() {
-        /* Decoded data will have the following structure:
-        Dict({
-            "9749BB80-B540-4B2D-8EC8-32CA31496C89": Dict({
-                "IPv6": Dict({
-                            "ConfigMethod": String("Automatic")
-                        }),
-                "Proxies": Dict({
-                    "ExceptionsList": Array([
-                                String("*.local"),
-                                String("169.254/16")
-                            ]),
-                    "FTPPassive": Integer(1)
-                }),
-                "IPv4": Dict ({
-                        "ConfigMethod": String("DHCP")
-                    }),
-                "SMB": Dict({}),
-                "DNS": Dict({}),
-                "Interface":  Dict({
-                        "DeviceName": String("en6"),
-                        "Hardware": String("Ethernet"),
-                        "Type": String("Ethernet"),
-                        "UserDefinedName": String("USB 10/100/1000 LAN")
-                    }),
-                "UserDefinedName": String("USB 10/100/1000 LAN")
-            }),
-            "...": Dict({...})
-        })
-        */
+    if let Some(Plist::Dictionary(network_services)) = plist.as_dictionary()
+        .and_then(|decoded_data| decoded_data.get("NetworkServices")) {
 
-        if let Some(Plist::Dict(network_services)) = decoded_data.get("NetworkServices") {
-            let mut proxies = HashMap::new();
-            let mut whitelist = Vec::new();
+        let mut proxies = HashMap::new();
+        let mut whitelist = Vec::new();
 
-            for interface in network_services.keys() {
-                if let Some(Plist::Dict(interface)) = network_services.get(interface) {
-                    if let Some(Plist::Dict(proxy)) = interface.get("Proxies") {
-                        let mut var = "";
-                        let mut scheme = "";
-                        for entry in proxy.keys() {
-                            match entry.as_ref(){
-                                "HTTPProxy" => {
-                                    var = "HTTP";
-                                    scheme = "http";
-                                }
-                                "HTTPSProxy" => {
-                                    var = "HTTPS";
-                                    scheme = "https"
-                                }
-                                "SOCKSProxy" => {
-                                    var = "SOCKS";
-                                    scheme = "http"
-                                }
-                                "FTPProxy" => {
-                                    var = "FTP";
-                                    scheme = "http"
-                                }
-                                _ => {continue}
-                            }
-                            if proxy.get(&format!("{}{}",var,"Enable")) == Some(&Plist::Integer(1)) {
-                                proxies.insert(
-                                    var.to_lowercase(),
-                                    util::parse_addr_default_scheme(
-                                        scheme,
-                                        &format!(
-                                            "{}:{}",
-                                            get_string(proxy.get(&format!("{}{}", var, "Proxy"))),
-                                            get_int(proxy.get(&format!("{}{}", var, "Port")))
-                                        )
-                                    )?
-                                );
-                            } else {
-                                continue
-                            }
+        for (_k,v) in network_services.iter() {
+
+            let proxy = v.as_dictionary().ok_or(InvalidConfigError)?
+                .get("Proxies").ok_or(InvalidConfigError)?
+                .as_dictionary().ok_or(InvalidConfigError)?;
+
+            for entry in proxy.keys() {
+                if entry.contains("Proxy") {
+                    // Ex: entry = "HTTPSProxy"
+                    let protocol = entry.replace("Proxy","");
+                    let scheme;
+                    match protocol.to_lowercase().as_ref() {
+                        "https" => {
+                            scheme = "https"
+                        },
+                        _ => {
+                            scheme = "http"
                         }
-                        if let Some(Plist::Array(exceptions)) = proxy.get("ExceptionsList") {
-                            for exception in exceptions {
-                                whitelist.push(get_string(Some(exception)));
-                            }
-                        }
+                    };
+                    if proxy.get(&format!("{}{}",protocol,"Enable")) == Some(&Plist::Integer(1)) {
+                        proxies.insert(
+                            protocol.to_lowercase(),
+                            util::parse_addr_default_scheme(
+                                scheme,
+                                &format!(
+                                    "{}:{}",
+                                    get_string(proxy.get(entry)),
+                                    get_int(proxy.get(&format!("{}{}", protocol, "Port")))
+                                )
+                            )?
+                        );
+                    } else {
+                        continue
                     }
                 }
             }
-
-            return Ok(ProxyConfig {
-                proxies,
-                whitelist,  // TODO: no way of knowing for which proxy...
-                ..Default::default()
-            });
+            if let Some(Plist::Array(exceptions)) = proxy.get("ExceptionsList") {
+                for exception in exceptions {
+                    whitelist.push(get_string(Some(exception)));
+                }
+            }
         }
+        return Ok(ProxyConfig {
+            proxies,
+            whitelist,  // TODO: no way of knowing for which proxy...
+            ..Default::default()
+        });
     }
     Err(NoProxyConfiguredError)
 }
@@ -126,5 +82,3 @@ fn get_int(i:Option<&Plist>) -> i64 {
         _ => -1,
     }
 }
-
-//TODO: impl test?
