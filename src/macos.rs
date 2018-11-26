@@ -1,3 +1,5 @@
+extern crate serde_json;
+
 use plist::Plist;
 use std::{
     fs::File,
@@ -16,8 +18,9 @@ pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
         .and_then(|decoded_data| decoded_data.get("NetworkServices")) {
 
         let mut proxies = HashMap::new();
-        let mut whitelist = Vec::new();
+        let mut whitelist = HashMap::new();
 
+        // Extract proxy settings for all network interfaces.
         for (_k,v) in network_services.iter() {
 
             let proxy = v.as_dictionary().ok_or(InvalidConfigError)?
@@ -26,18 +29,19 @@ pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
 
             for entry in proxy.keys() {
                 if entry.contains("Proxy") {
-                    // Ex: entry = "HTTPSProxy"
+                    // Ex: entry = "HTTPSProxy".
                     let protocol = entry.replace("Proxy","");
                     let scheme;
-                    match protocol.to_lowercase().as_ref() {
-                        "https" => {
+                    match protocol.as_ref() {
+                        "HTTPS" => {
                             scheme = "https"
                         },
                         _ => {
                             scheme = "http"
                         }
                     };
-                    if proxy.get(&format!("{}{}",protocol,"Enable")) == Some(&Plist::Integer(1)) {
+                    if proxy.get(&format!("{}{}",protocol,"Enable"))
+                        == Some(&Plist::Integer(1)) {
                         proxies.insert(
                             protocol.to_lowercase(),
                             util::parse_addr_default_scheme(
@@ -49,20 +53,28 @@ pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
                                 )
                             )?
                         );
+                        if let Some(Plist::Array(exceptions)) = proxy.get("ExceptionsList") {
+                            // Proxy exceptions can be different for different network interfaces on MacOs.
+                            if let Some(Plist::String(user_defined_name)) = v
+                                .as_dictionary().ok_or(InvalidConfigError)?
+                                .get("UserDefinedName"){
+                                let mut vec = Vec::new();
+                                for exception in exceptions {
+                                    vec.push(get_string(Some(exception)));
+                                }
+                                whitelist.insert(user_defined_name,vec);
+                            }
+                        }
                     } else {
+                        // Proxy for protocol is not enabled.
                         continue
                     }
-                }
-            }
-            if let Some(Plist::Array(exceptions)) = proxy.get("ExceptionsList") {
-                for exception in exceptions {
-                    whitelist.push(get_string(Some(exception)));
                 }
             }
         }
         return Ok(ProxyConfig {
             proxies,
-            whitelist,  // TODO: no way of knowing for which proxy...
+            whitelist:vec!{serde_json::to_string(&whitelist).ok().unwrap_or(String::new())},
             ..Default::default()
         });
     }
