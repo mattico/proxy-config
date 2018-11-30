@@ -52,7 +52,8 @@ pub(crate) fn get_proxy_config_internal() -> Result<Vec<ProxyConfigInternal>> {
                         let mut whitelist = Vec::new();
 
                         if let Some(Plist::Array(exceptions)) = proxy.get("ExceptionsList") {
-                            // Proxy exceptions can be different for different network interfaces on MacOs.
+                            // Proxy exceptions can be different
+                            // for different network interfaces on MacOs.
                             if let Some(Plist::String(user_defined_name)) = v
                                 .as_dictionary().ok_or(InvalidConfigError)?
                                 .get("UserDefinedName"){
@@ -71,20 +72,18 @@ pub(crate) fn get_proxy_config_internal() -> Result<Vec<ProxyConfigInternal>> {
                                     scheme,
                                     &format!(
                                         "{}:{}",
-                                        proxy.get(entry)
-                                            .ok_or(InvalidConfigError)?
-                                            .as_string()
-                                            .ok_or(InvalidConfigError)?,
-                                        proxy.get(&format!("{}{}", protocol, "Port"))
-                                            .ok_or(InvalidConfigError)?
-                                            .as_integer()
-                                            .ok_or(InvalidConfigError)?
+                                        proxy.get(entry).ok_or(InvalidConfigError)?
+                                            .as_string().ok_or(InvalidConfigError)?,
+                                        proxy.get(
+                                            &format!("{}{}", protocol, "Port")
+                                        ).ok_or(InvalidConfigError)?
+                                            .as_integer().ok_or(InvalidConfigError)?
                                     )
                                 )?,
-                                port: proxy.get(&format!("{}{}", protocol, "Port"))
-                                    .ok_or(InvalidConfigError)?
-                                    .as_integer()
-                                    .ok_or(InvalidConfigError)?,
+                                port: proxy.get(
+                                    &format!("{}{}", protocol, "Port")
+                                ).ok_or(InvalidConfigError)?
+                                    .as_integer().ok_or(InvalidConfigError)?,
                                 protocol: protocol.to_lowercase(),
                                 interface,
                                 whitelist:serde_json::to_string(&whitelist).ok()
