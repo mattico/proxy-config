@@ -3,12 +3,12 @@ extern crate url;
 use url::Url;
 
 pub fn main () {
-    match proxy_config::get_proxy_for_url(Url::parse("http://google.com").unwrap()).ok(){
+    match proxy_config::get_proxy_for_url(Url::parse("https://google.com").unwrap()).ok(){
         Some(a) => {
             println!("Proxy for google.com: {}", a);
         },
         None => {
-            println!("No need for a proxy.");
+            println!("https://google.com can be accessed without a proxy");
         },
     };
     match proxy_config::get_proxy_config() {
