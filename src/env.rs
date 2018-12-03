@@ -50,7 +50,15 @@ mod tests {
         proxies.insert("https".into(), Url::parse("https://candybox2.github.io").unwrap());
         proxies.insert("ftp".into(), Url::parse("http://9-eyes.com").unwrap());
 
-        assert_eq!(get_proxy_config().unwrap().proxies, proxies);
+        let env_var_proxies = get_proxy_config().unwrap().proxies;
+        if env_var_proxies.capacity() != 4 {
+            // Other proxies are present on the host machine.
+            for (k,..) in proxies.iter() {
+                assert_eq!(env_var_proxies.get(k), proxies.get(k));
+            }
+        } else {
+            assert_eq!(env_var_proxies, proxies);
+        }
     }
 
     #[test]
