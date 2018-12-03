@@ -16,7 +16,7 @@ pub struct ProxyConfigInternal {
     pub whitelist: String,
 }
 
-pub(crate) fn get_proxy_config_internal() -> Result<Vec<ProxyConfigInternal>> {
+pub fn get_proxy_config_ex() -> Result<Vec<ProxyConfigInternal>> {
 
     let plist = File::open("/Library/Preferences/SystemConfiguration/preferences.plist").ok()
         .and_then(|file| Plist::read(file).ok()).ok_or(OsError)?;
@@ -103,7 +103,7 @@ pub(crate) fn get_proxy_config_internal() -> Result<Vec<ProxyConfigInternal>> {
 }
 
 pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
-    let proxy_configs = get_proxy_config_internal()?;
+    let proxy_configs = get_proxy_config_ex()?;
     let mut proxies = HashMap::new();
     let mut whitelist = Vec::new();
     for proxy_config in proxy_configs {

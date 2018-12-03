@@ -8,7 +8,7 @@ use url::Url;
 mod windows;
 
 #[cfg(target_os="macos")]
-mod macos;
+pub mod macos;
 #[cfg(target_os="macos")]
 extern crate plist;
 
