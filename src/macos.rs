@@ -148,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn test_os_version () {
+    fn test_macos () {
         let reader: Box<ProxyConfigReader> = Box::new(Test{});
         let proxy_configs = &get_proxy_config_ex(reader.borrow()).unwrap()[0];
         assert_eq!(proxy_configs.proxy, Url::parse("https://127.0.0.1:50001/").unwrap());
