@@ -8,15 +8,15 @@ use std::{
 
 use super::*;
 #[derive(Debug)]
-pub struct ProxyConfigInternal {
+pub struct ProxyConfigEx {
     pub proxy: Url,
-    pub port: i64,
+    pub port: u16,
     pub protocol: String,
     pub interface: String,
     pub whitelist: String,
 }
 
-pub fn get_proxy_config_ex() -> Result<Vec<ProxyConfigInternal>> {
+pub fn get_proxy_config_ex() -> Result<Vec<ProxyConfigEx>> {
 
     let plist = File::open("/Library/Preferences/SystemConfiguration/preferences.plist").ok()
         .and_then(|file| Plist::read(file).ok()).ok_or(OsError)?;
@@ -67,7 +67,7 @@ pub fn get_proxy_config_ex() -> Result<Vec<ProxyConfigInternal>> {
                         }
 
                         proxies.push(
-                            ProxyConfigInternal {
+                            ProxyConfigEx {
                                 proxy: util::parse_addr_default_scheme(
                                     scheme,
                                     &format!(
@@ -83,7 +83,7 @@ pub fn get_proxy_config_ex() -> Result<Vec<ProxyConfigInternal>> {
                                 port: proxy.get(
                                     &format!("{}{}", protocol, "Port")
                                 ).ok_or(InvalidConfigError)?
-                                    .as_integer().ok_or(InvalidConfigError)?,
+                                    .as_integer().ok_or(InvalidConfigError)? as u16,
                                 protocol: protocol.to_lowercase(),
                                 interface,
                                 whitelist:serde_json::to_string(&whitelist).ok()
