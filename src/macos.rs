@@ -11,9 +11,7 @@ use super::*;
 
 #[derive(Debug)]
 pub struct ProxyConfigEx {
-    pub proxy: Url,
-    pub port: u16,
-    pub protocol: String,
+    pub url: Url,
     pub interface: String,
     pub whitelist: String,
 }
@@ -51,15 +49,7 @@ pub fn get_proxy_config_ex(reader: &ProxyConfigReader) -> Result<Vec<ProxyConfig
                 if entry.ends_with("Proxy") {
                     // Ex: entry = "HTTPSProxy".
                     let protocol = entry.replace("Proxy","");
-                    let scheme;
-                    match protocol.as_ref() {
-                        "HTTPS" => {
-                            scheme = "https"
-                        },
-                        _ => {
-                            scheme = "http"
-                        }
-                    };
+                    let scheme = &protocol.to_lowercase();
                     if proxy.get(&format!("{}{}",protocol,"Enable"))
                         == Some(&Plist::Integer(1)) {
                         let mut interface = String::new();
@@ -82,7 +72,7 @@ pub fn get_proxy_config_ex(reader: &ProxyConfigReader) -> Result<Vec<ProxyConfig
 
                         proxies.push(
                             ProxyConfigEx {
-                                proxy: util::parse_addr_default_scheme(
+                                url: util::parse_addr_default_scheme(
                                     scheme,
                                     &format!(
                                         "{}:{}",
@@ -94,11 +84,6 @@ pub fn get_proxy_config_ex(reader: &ProxyConfigReader) -> Result<Vec<ProxyConfig
                                             .as_integer().ok_or(InvalidConfigError)?
                                     )
                                 )?,
-                                port: proxy.get(
-                                    &format!("{}{}", protocol, "Port")
-                                ).ok_or(InvalidConfigError)?
-                                    .as_integer().ok_or(InvalidConfigError)? as u16,
-                                protocol: protocol.to_lowercase(),
                                 interface,
                                 whitelist:serde_json::to_string(&whitelist).ok()
                                     .unwrap_or(String::new()),
@@ -124,8 +109,8 @@ pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
     let mut whitelist = Vec::new();
     for proxy_config in proxy_configs {
         proxies.insert(
-            proxy_config.protocol,
-            proxy_config.proxy
+            proxy_config.url.scheme().to_string(),
+            proxy_config.url
         );
         whitelist.push(proxy_config.whitelist);
     }
@@ -151,7 +136,7 @@ mod tests {
     fn test_macos () {
         let reader: Box<ProxyConfigReader> = Box::new(Test{});
         let proxy_configs = &get_proxy_config_ex(reader.borrow()).unwrap()[0];
-        assert_eq!(proxy_configs.proxy, Url::parse("https://127.0.0.1:50001/").unwrap());
+        assert_eq!(proxy_configs.url, Url::parse("https://127.0.0.1:50001/").unwrap());
         assert_eq!(proxy_configs.port, 50001);
         assert_eq!(proxy_configs.protocol, "https");
         assert_eq!(proxy_configs.interface, "Thunderbolt Bridge");
