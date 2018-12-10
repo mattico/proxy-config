@@ -13,11 +13,10 @@ pub fn main () {
     };
     match proxy_config::get_proxy_config() {
         Ok(proxy_config::ProxyConfig { proxies, whitelist, .. }) => {
+            let mut i = 0;
             for p in proxies {
-                println!("Proxy: {:?}", p);
-            }
-            for e in whitelist {
-                println!("Exceptions: {}", e);
+                println!("Proxy: {:?}, Exceptions: {:?}", p, whitelist[i]);
+                i=i+1;
             }
         },
         Err(e) => {

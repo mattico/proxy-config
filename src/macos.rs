@@ -137,6 +137,6 @@ mod tests {
         let proxy_configs = &get_proxy_config_ex(reader.borrow()).unwrap()[0];
         assert_eq!(proxy_configs.url, Url::parse("https://127.0.0.1:50001/").unwrap());
         assert_eq!(proxy_configs.interface, "Thunderbolt Bridge");
-        assert_eq!(proxy_configs.whitelist, r#"["*.local","169.254/16","123.0.0.1/15"]"#);
+        assert_eq!(proxy_configs.whitelist, "*.local,169.254/16,123.0.0.1/15");
     }
 }
