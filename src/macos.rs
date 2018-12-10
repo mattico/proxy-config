@@ -85,8 +85,7 @@ pub fn get_proxy_config_ex(reader: &ProxyConfigReader) -> Result<Vec<ProxyConfig
                                     )
                                 )?,
                                 interface,
-                                whitelist:serde_json::to_string(&whitelist).ok()
-                                    .unwrap_or(String::new()),
+                                whitelist:whitelist.join(",")
                             }
                         );
                     } else {
@@ -137,8 +136,6 @@ mod tests {
         let reader: Box<ProxyConfigReader> = Box::new(Test{});
         let proxy_configs = &get_proxy_config_ex(reader.borrow()).unwrap()[0];
         assert_eq!(proxy_configs.url, Url::parse("https://127.0.0.1:50001/").unwrap());
-        assert_eq!(proxy_configs.port, 50001);
-        assert_eq!(proxy_configs.protocol, "https");
         assert_eq!(proxy_configs.interface, "Thunderbolt Bridge");
         assert_eq!(proxy_configs.whitelist, r#"["*.local","169.254/16","123.0.0.1/15"]"#);
     }
