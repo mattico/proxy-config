@@ -1,6 +1,4 @@
 # proxy-cfg
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/uip8grlodr0y4q8c/branch/master?svg=true)](https://ci.appveyor.com/project/mattico/proxy-config/branch/master)
-[![Travis Build Status](https://travis-ci.org/mattico/proxy-cfg.svg?branch=master)](https://travis-ci.org/mattico/proxy-cfg)
 [![Crates.io](https://img.shields.io/crates/v/proxy-cfg.svg)](https://crates.io/crates/proxy-cfg)
 [![Documentation](https://docs.rs/proxy_cfg/badge.svg)](https://docs.rs/proxy_cfg)
 
