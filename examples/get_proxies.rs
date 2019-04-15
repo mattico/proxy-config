@@ -1,7 +1,7 @@
-extern crate proxy_config;
+extern crate proxy_cfg;
 extern crate url;
 
-use proxy_config::*;
+use proxy_cfg::*;
 use url::Url;
 
 use std::env;

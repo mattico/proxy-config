@@ -4,7 +4,7 @@
 environment:
   global:
     RUST_VERSION: stable
-    CRATE_NAME: proxy_config
+    CRATE_NAME: proxy_cfg
 
   matrix:
     # MinGW

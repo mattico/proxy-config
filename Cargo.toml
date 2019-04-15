@@ -1,18 +1,18 @@
 [package]
-name = "proxy_config"
-version = "0.0.2"
+name = "proxy_cfg"
+version = "0.1.0"
 authors = ["mattico8@gmail.com"]
 categories = ["network-programming", "os"]
 description = "A library to get proxy configuration from the OS."
 keywords = ["proxy"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/mattico/proxy-config"
-documentation = "https://docs.rs/proxy_config"
+repository = "https://github.com/devolutions/proxy-cfg"
+documentation = "https://docs.rs/proxy_cfg"
 
 [badges]
-appveyor = { repository = "mattico/proxy-config" }
-travis-ci = { repository = "mattico/proxy-config" }
+appveyor = { repository = "devolutions/proxy-cfg" }
+travis-ci = { repository = "devolutions/proxy-cfg" }
 
 [dependencies]
 url = "1.5"

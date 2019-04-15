@@ -8,7 +8,7 @@ sudo: required
 
 env:
   global:
-    - CRATE_NAME=proxy_config
+    - CRATE_NAME=proxy_cfg
 
 matrix:
   include:

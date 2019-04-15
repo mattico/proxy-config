@@ -1,17 +1,17 @@
-# proxy-config
+# proxy-cfg
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/uip8grlodr0y4q8c/branch/master?svg=true)](https://ci.appveyor.com/project/mattico/proxy-config/branch/master)
-[![Travis Build Status](https://travis-ci.org/mattico/proxy-config.svg?branch=master)](https://travis-ci.org/mattico/proxy-config)
-[![Crates.io](https://img.shields.io/crates/v/proxy-config.svg)](https://crates.io/crates/proxy-config)
-[![Documentation](https://docs.rs/proxy_config/badge.svg)](https://docs.rs/proxy_config)
+[![Travis Build Status](https://travis-ci.org/mattico/proxy-cfg.svg?branch=master)](https://travis-ci.org/mattico/proxy-cfg)
+[![Crates.io](https://img.shields.io/crates/v/proxy-cfg.svg)](https://crates.io/crates/proxy-cfg)
+[![Documentation](https://docs.rs/proxy_cfg/badge.svg)](https://docs.rs/proxy_cfg)
 
 A Rust library to get proxy configuration from the OS.
 
 ## Usage
 
 ```Rust
-extern crate proxy_config;
+extern crate proxy_cfg;
 
-if let Ok(proxy) = proxy_config::get_proxy_for_url(&url) {
+if let Ok(proxy) = proxy_cfg::get_proxy_for_url(&url) {
     // use proxy to connect...
 }
 ```
