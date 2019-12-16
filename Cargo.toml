@@ -1,6 +1,6 @@
 [package]
 name = "proxy_cfg"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["mattico8@gmail.com"]
 categories = ["network-programming", "os"]
 description = "A library to get proxy configuration from the OS."
@@ -15,7 +15,7 @@ appveyor = { repository = "devolutions/proxy-cfg" }
 travis-ci = { repository = "devolutions/proxy-cfg" }
 
 [dependencies]
-url = "1.5"
+url = "2"
 
 [dev-dependencies]
 tempfile = "2.1.6"
