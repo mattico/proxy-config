@@ -25,7 +25,7 @@ fn get_i32_value(dictionary: &CFDictionary<CFString, CFType>, key: &'static str)
         .and_then(|v| v.to_i32())
 }
 
-pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
+pub(crate) fn get_proxy_config() -> Result<Option<ProxyConfig>> {
     let proxies_ref = unsafe {
         dynamic_store_copy_specific::SCDynamicStoreCopyProxies(ptr::null())
     };
@@ -33,7 +33,7 @@ pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
     let mut proxy_config: ProxyConfig = Default::default();
 
     if proxies_ref.is_null() {
-        return Ok(proxy_config)
+        return Ok(None)
     }
 
     let proxies: CFDictionary<CFString, CFType> = unsafe { 
@@ -80,10 +80,5 @@ pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
         proxy_config.whitelist.extend(cf_strings.iter().map(|s| s.to_string().to_lowercase()));
     }
 
-    Ok(proxy_config)
-}
-
-#[test]
-fn get_proxy_config_test() {
-    let _ = get_proxy_config();
+    Ok(Some(proxy_config))
 }

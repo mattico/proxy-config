@@ -192,24 +192,24 @@ fn win_http_get_default_config() -> Option<ProxyConfig> {
     Some(proxy_config)
 }
 
-pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
+pub(crate) fn get_proxy_config() -> Result<Option<ProxyConfig>> {
     let win_inet_user_proxy = win_inet_get_current_user_config();
 
     if !win_inet_is_per_user() || win_inet_user_proxy.is_none() {
         if let Some(proxy_config) = win_inet_get_local_machine_config() {
-            return Ok(proxy_config)
+            return Ok(Some(proxy_config))
         }
     }
 
     if let Some(proxy_config) = win_inet_user_proxy {
-        return Ok(proxy_config)
+        return Ok(Some(proxy_config))
     }
 
     if let Some(proxy_config) = win_http_get_default_config() {
-        return Ok(proxy_config)
+        return Ok(Some(proxy_config))
     }
 
-    Ok(Default::default())
+    Ok(None)
 }
 
 #[cfg(test)]

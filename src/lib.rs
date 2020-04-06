@@ -58,7 +58,7 @@ impl ProxyConfig {
     }
 }
 
-type ProxyFn = fn() -> Result<ProxyConfig>;
+type ProxyFn = fn() -> Result<Option<ProxyConfig>>;
 
 const METHODS: &[&ProxyFn] = &[
     #[cfg(feature = "env")]
@@ -71,15 +71,25 @@ const METHODS: &[&ProxyFn] = &[
     &(macos::get_proxy_config as ProxyFn),
 ];
 
-pub fn get_proxy_config() -> Result<ProxyConfig> {
-    let mut last_err = Error::PlatformNotSupported;
+pub fn get_proxy_config() -> Result<Option<ProxyConfig>> {
+    if METHODS.len() == 0 {
+        return Err(Error::PlatformNotSupported)
+    }
+
+    let mut last_err: Option<Error> = None;
     for get_proxy_config in METHODS {
         match get_proxy_config() {
-            Ok(config) => return Ok(config),
-            Err(e) => last_err = e,
+            Ok(Some(config)) => return Ok(Some(config)),
+            Err(e) => last_err = Some(e),
+            _ => {},
         }
     }
-    Err(last_err)
+
+    if let Some(e) = last_err {
+        return Err(e)
+    }
+
+    Ok(None)
 }
 
 #[cfg(test)]
@@ -105,8 +115,9 @@ mod tests {
 
     #[test]
     fn smoke_test_get_proxy_for_url() {
-        let proxy_config = get_proxy_config().unwrap();
-        let _ = proxy_config.get_proxy_for_url(Url::parse("https://google.com").unwrap());
+        if let Some(proxy_config) = get_proxy_config().unwrap() {
+            let _ = proxy_config.get_proxy_for_url(Url::parse("https://google.com").unwrap());
+        }
     }
 
     #[test]

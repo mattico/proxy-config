@@ -13,19 +13,19 @@ use super::*;
 
 /// Extract proxy information from /etc/sysconfig/proxy if the file is available
 /// and formatted correctly.
-pub(crate) fn get_proxy_config() -> Result<ProxyConfig> {
+pub(crate) fn get_proxy_config() -> Result<Option<ProxyConfig>> {
     get_proxy_config_from_file("/etc/sysconfig/proxy")
 }
 
 /// The same as get_proxy_config() but this function expects a file's path as an
 /// argument.
-fn get_proxy_config_from_file<P: AsRef<Path>>(config_file: P) -> Result<ProxyConfig> {
+fn get_proxy_config_from_file<P: AsRef<Path>>(config_file: P) -> Result<Option<ProxyConfig>> {
     let mut proxy_config: ProxyConfig = Default::default();
     let map = read_key_value_pairs_from_file(config_file)?;
     if let Some(enabled) = map.get("PROXY_ENABLED") {
         match enabled.as_str() {
             "yes" => (), //continue running this function
-            "no"  => return Ok(proxy_config),
+            "no"  => return Ok(None),
             _ => return Err(Error::InvalidConfig), //consider all other values as illegal
         }
     } else {
@@ -49,7 +49,7 @@ fn get_proxy_config_from_file<P: AsRef<Path>>(config_file: P) -> Result<ProxyCon
         }
     }
 
-    Ok(proxy_config)
+    Ok(Some(proxy_config))
 }
 
 /// Read a file which contains key-value pairs that are separated by an equals
@@ -158,7 +158,7 @@ PROXY_ENABLED="no""##);
         let file = spit(r##"HTTP_PROXY="http://1.2.3.4"
 HTTPS_PROXY="https://1.2.3.4:8000"
 PROXY_ENABLED="yes""##);
-        let config = get_proxy_config_from_file(file.path()).unwrap();
+        let config = get_proxy_config_from_file(file.path()).unwrap().unwrap();
         assert_eq!(config.proxies.get("http").unwrap(), "http://1.2.3.4");
         assert_eq!(config.proxies.get("https").unwrap(), "https://1.2.3.4:8000");
     }
@@ -173,7 +173,7 @@ PROXY_ENABLED="yes""##);
 HTTPS_PROXY="https://1.2.3.4:8000"
 NO_PROXY="localhost,1.2.3.4,5.6.7.8"
 PROXY_ENABLED="yes""##);
-        let config = get_proxy_config_from_file(file.path()).unwrap();
+        let config = get_proxy_config_from_file(file.path()).unwrap().unwrap();
         for no_proxy in config.whitelist {
             match no_proxy.as_str() {
                 "localhost" => (),
@@ -202,7 +202,7 @@ HTTPS_PROXY="http://192.168.0.1"
 FTP_PROXY="http://192.168.0.1"
 NO_PROXY="localhost, 127.0.0.1"
 "##);
-    let config = get_proxy_config_from_file(file.path()).unwrap();
+    let config = get_proxy_config_from_file(file.path()).unwrap().unwrap();
     assert_eq!(config.proxies.get("http").unwrap(), "http://192.168.0.1");
     assert_eq!(config.proxies.get("https").unwrap(), "http://192.168.0.1");
     assert_eq!(config.proxies.get("ftp").unwrap(), "http://192.168.0.1");
