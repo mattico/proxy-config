@@ -1,6 +1,4 @@
-extern crate url;
-
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use url::Url;
 
@@ -8,9 +6,7 @@ use url::Url;
 mod windows;
 
 #[cfg(target_os="macos")]
-pub mod macos;
-#[cfg(target_os="macos")]
-extern crate plist;
+mod macos;
 
 #[cfg(feature = "env")]
 mod env;
@@ -19,17 +15,47 @@ mod env;
 mod sysconfig_proxy;
 
 mod errors;
-mod util;
 
-pub use errors::ProxyConfigError;
-use errors::*;
-use errors::ProxyConfigError::*;
+use errors::Error;
+
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ProxyConfig {
-    pub proxies: HashMap<String, Url>,
-    pub whitelist: Vec<String>,
+    pub proxies: HashMap<String, String>,
+    pub whitelist: HashSet<String>,
+    pub exclude_simple: bool,
     __other_stuff: (),
+}
+
+impl ProxyConfig {
+    pub fn get_proxy_for_url(&self, url: Url) -> Option<String> {
+        let host = match url.host_str() {
+            Some(host) => host.to_lowercase(),
+            None => return None,
+        };
+
+        if self.exclude_simple && !host.chars().any(|c| c == '.') {
+            return None
+        }
+
+        if self.whitelist.contains(&host) {
+            return None
+        }
+
+        // TODO: Wildcard matches on IP address, e.g. 192.168.*.*
+        // TODO: Subnet matches on IP address, e.g. 192.168.16.0/24
+
+        if self.whitelist.iter().any(|s| {
+            if let Some(pos) = s.rfind('*') {
+                let slice = &s[pos + 1..];
+                return slice.len() > 0 && host.ends_with(slice)
+            }
+            false 
+        }) { return None }
+
+        self.proxies.get(url.scheme()).map(|s| s.to_string().to_lowercase())
+    }
 }
 
 type ProxyFn = fn() -> Result<ProxyConfig>;
@@ -45,9 +71,8 @@ const METHODS: &[&ProxyFn] = &[
     &(macos::get_proxy_config as ProxyFn),
 ];
 
-/// Returns a vector of URLs for the proxies configured by the system
 pub fn get_proxy_config() -> Result<ProxyConfig> {
-    let mut last_err = PlatformNotSupportedError;
+    let mut last_err = Error::PlatformNotSupported;
     for get_proxy_config in METHODS {
         match get_proxy_config() {
             Ok(config) => return Ok(config),
@@ -57,32 +82,21 @@ pub fn get_proxy_config() -> Result<ProxyConfig> {
     Err(last_err)
 }
 
-/// Returns the proxy to use for the given URL
-pub fn get_proxy_for_url(url: Url) -> Result<Url> {
-    use std::ascii::AsciiExt;
-    // TODO: cache get_proxy_config result?
-    match get_proxy_config() {
-        Ok(config) => {
-            for domain in config.whitelist {
-                // TODO: make this more robust
-                if url.domain().unwrap().eq_ignore_ascii_case(&domain) {
-                    return Err(NoProxyNeededError);
-                }
-            }
-
-            if let Some(url) = config.proxies.get(url.scheme()) {
-                Ok(url.clone())
-            } else {
-                Err(NoProxyForSchemeError(url.scheme().to_string()))
-            }
-        },
-        Err(e) => Err(e),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    macro_rules! map(
+        { $($key:expr => $value:expr),+ } => {
+            {
+                let mut m = ::std::collections::HashMap::new();
+                $(
+                    m.insert($key, $value);
+                )+
+                m
+            }
+         };
+    );
 
     #[test]
     fn smoke_test_get_proxies() {
@@ -91,6 +105,32 @@ mod tests {
 
     #[test]
     fn smoke_test_get_proxy_for_url() {
-        let _ = get_proxy_for_url(Url::parse("https://google.com").unwrap());
+        let proxy_config = get_proxy_config().unwrap();
+        let _ = proxy_config.get_proxy_for_url(Url::parse("https://google.com").unwrap());
+    }
+
+    #[test]
+    fn test_get_proxy_for_url() {
+        let proxy_config = ProxyConfig { 
+            proxies: map!{ 
+                "http".into() => "1.1.1.1".into(), 
+                "https".into() => "2.2.2.2".into() 
+            },
+            whitelist: vec![
+                "www.devolutions.net", 
+                "*.microsoft.com", 
+                "*apple.com"
+            ].into_iter().map(|s| s.to_string()).collect(),
+            exclude_simple: true,
+            ..Default::default() 
+        };
+
+        assert_eq!(proxy_config.get_proxy_for_url(Url::parse("http://simpledomain").unwrap()), None);
+        assert_eq!(proxy_config.get_proxy_for_url(Url::parse("http://simple.domain").unwrap()), Some("1.1.1.1".into()));
+        assert_eq!(proxy_config.get_proxy_for_url(Url::parse("http://www.devolutions.net").unwrap()), None);
+        assert_eq!(proxy_config.get_proxy_for_url(Url::parse("http://www.microsoft.com").unwrap()), None);
+        assert_eq!(proxy_config.get_proxy_for_url(Url::parse("http://www.microsoft.com.fun").unwrap()), Some("1.1.1.1".into()));
+        assert_eq!(proxy_config.get_proxy_for_url(Url::parse("http://test.apple.com").unwrap()), None);
+        assert_eq!(proxy_config.get_proxy_for_url(Url::parse("https://test.apple.net").unwrap()), Some("2.2.2.2".into()));
     }
 }
